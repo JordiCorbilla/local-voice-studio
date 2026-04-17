@@ -56,7 +56,7 @@ def test_generation_validation_and_lifecycle(client):
         "/api/generations",
         json={"profile_id": profile_id, "input_text": "   ", "language": "en"},
     )
-    assert empty_text.status_code == 422
+    assert empty_text.status_code == 400
 
     upload_response = client.post(
         f"/api/profiles/{profile_id}/clips/upload",

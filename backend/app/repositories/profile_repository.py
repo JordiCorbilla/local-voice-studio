@@ -12,6 +12,7 @@ class ProfileRepository:
             select(Profile)
             .options(selectinload(Profile.clips), selectinload(Profile.generations))
             .order_by(Profile.updated_at.desc())
+            .execution_options(populate_existing=True)
         )
         return list(session.scalars(stmt).all())
 
@@ -20,6 +21,7 @@ class ProfileRepository:
             select(Profile)
             .where(Profile.id == profile_id)
             .options(selectinload(Profile.clips), selectinload(Profile.generations))
+            .execution_options(populate_existing=True)
         )
         return session.scalars(stmt).first()
 

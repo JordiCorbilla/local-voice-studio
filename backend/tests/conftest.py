@@ -27,8 +27,8 @@ class FakeEngine:
     def prepare_profile(self, profile: PreparedProfile) -> PreparedProfile:
         artifact_path = profile.conditioning_artifact_path
         if artifact_path:
-          artifact_path.parent.mkdir(parents=True, exist_ok=True)
-          artifact_path.write_bytes(b"cache")
+            artifact_path.parent.mkdir(parents=True, exist_ok=True)
+            artifact_path.write_bytes(b"cache")
         self.loaded = True
         return profile
 
@@ -85,7 +85,10 @@ def settings(tmp_path: Path) -> Settings:
 
 @pytest.fixture()
 def container(settings: Settings) -> AppContainer:
-    return AppContainer(settings=settings, tts_engine=FakeEngine())
+    test_container = AppContainer(settings=settings, tts_engine=FakeEngine())
+    test_container.startup()
+    yield test_container
+    test_container.shutdown()
 
 
 @pytest.fixture()
