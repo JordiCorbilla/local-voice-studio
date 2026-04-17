@@ -71,14 +71,20 @@ class ProfileService:
     def delete_profile(self, session: Session, profile_id: str) -> None:
         profile = self.get_profile(session, profile_id)
         clip_paths = []
+        generation_paths = []
         for clip in profile.clips:
             clip_paths.extend([Path(clip.original_path), Path(clip.normalized_path)])
+        for generation in profile.generations:
+            if generation.output_path:
+                generation_paths.append(Path(generation.output_path))
         cache_path = Path(profile.conditioning_artifact_path) if profile.conditioning_artifact_path else None
 
         self.profiles.delete(session, profile)
         session.commit()
 
         self.audio_service.remove_clip_files(clip_paths)
+        for generation_path in generation_paths:
+            self.audio_service.remove_generation_file(generation_path)
         safe_unlink(cache_path)
 
     def list_clips(self, session: Session, profile_id: str) -> list[ReferenceClip]:
