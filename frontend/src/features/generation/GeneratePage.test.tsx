@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GeneratePage } from "./GeneratePage";
 import { renderWithProviders } from "../../test/render";
 
@@ -80,7 +80,7 @@ describe("GeneratePage", () => {
 
     renderWithProviders(<GeneratePage />);
 
-    await screen.findByText(/generate/i);
+    await screen.findByRole("heading", { name: "Generate" });
     fireEvent.change(screen.getByLabelText(/text/i), { target: { value: "Hello" } });
     fireEvent.click(screen.getByRole("button", { name: /generate audio/i }));
 

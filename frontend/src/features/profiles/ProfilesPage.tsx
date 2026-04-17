@@ -32,7 +32,10 @@ export function ProfilesPage() {
       </div>
       <div className="two-column">
         <SectionCard title="Create profile" description="Start a new reusable voice profile.">
-          <ProfileForm submitLabel="Create profile" onSubmit={(values) => createProfile.mutateAsync(values)} />
+          <ProfileForm
+            submitLabel="Create profile"
+            onSubmit={(values) => createProfile.mutateAsync(values).then(() => undefined)}
+          />
         </SectionCard>
         <SectionCard title="Saved voices" description="Recent profiles on this machine.">
           {profilesQuery.data?.length ? (

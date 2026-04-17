@@ -49,8 +49,14 @@ async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
     const payload = (await response.json().catch(() => ({
       code: "unknown_error",
       message: "Unexpected API error.",
-    }))) as { detail?: ApiErrorPayload };
-    throw new ApiError(response.status, payload.detail ?? payload);
+    }))) as ApiErrorPayload | { detail?: ApiErrorPayload };
+    let detail: ApiErrorPayload;
+    if ("detail" in payload && payload.detail) {
+      detail = payload.detail;
+    } else {
+      detail = payload as ApiErrorPayload;
+    }
+    throw new ApiError(response.status, detail);
   }
   if (response.status === 204) {
     return undefined as T;

@@ -56,7 +56,11 @@ export function ProfileDetailPage() {
   });
 
   if (!profileQuery.data) {
-    return <div className="page"><p className="muted">Loading profile...</p></div>;
+    return (
+      <div className="page">
+        <p className="muted">Loading profile...</p>
+      </div>
+    );
   }
 
   const profile = profileQuery.data;
@@ -65,7 +69,7 @@ export function ProfileDetailPage() {
     <div className="page">
       <div className="page-header">
         <h1>{profile.display_name}</h1>
-        <p className="muted">Manage reference clips, update defaults, and test the profile’s recent generations.</p>
+        <p className="muted">Manage reference clips, update defaults, and review recent outputs for this profile.</p>
       </div>
 
       <div className="profile-grid">
@@ -74,7 +78,7 @@ export function ProfileDetailPage() {
             <ProfileForm
               initialProfile={profile}
               submitLabel="Save changes"
-              onSubmit={(values) => updateProfile.mutateAsync(values)}
+              onSubmit={(values) => updateProfile.mutateAsync(values).then(() => undefined)}
             />
           </SectionCard>
 
@@ -95,7 +99,7 @@ export function ProfileDetailPage() {
                 />
               </label>
             </div>
-            <RecorderPanel onSave={(file) => uploadRecording.mutateAsync(file)} />
+            <RecorderPanel onSave={(file) => uploadRecording.mutateAsync(file).then(() => undefined)} />
             {profile.clips.length ? (
               <div className="list">
                 {profile.clips.map((clip) => (
@@ -104,7 +108,7 @@ export function ProfileDetailPage() {
                       <div>
                         <strong>{clip.original_filename}</strong>
                         <p className="muted">
-                          {formatDuration(clip.duration_seconds)} · {clip.sample_rate} Hz · {formatDate(clip.created_at)}
+                          {formatDuration(clip.duration_seconds)} | {clip.sample_rate} Hz | {formatDate(clip.created_at)}
                         </p>
                       </div>
                       {clip.is_primary ? <span className="pill">Primary</span> : null}
@@ -124,7 +128,10 @@ export function ProfileDetailPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState title="No reference clips" description="Upload or record audio to make the profile usable for generation." />
+              <EmptyState
+                title="No reference clips"
+                description="Upload or record audio to make the profile usable for generation."
+              />
             )}
           </SectionCard>
         </div>
@@ -146,7 +153,10 @@ export function ProfileDetailPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState title="No outputs yet" description="Generate speech from the main workspace to build profile history." />
+              <EmptyState
+                title="No outputs yet"
+                description="Generate speech from the main workspace to build profile history."
+              />
             )}
           </SectionCard>
         </div>

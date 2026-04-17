@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { HistoryPage } from "./HistoryPage";
 import { renderWithProviders } from "../../test/render";
 
