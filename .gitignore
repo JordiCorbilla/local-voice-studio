@@ -191,6 +191,9 @@ cython_debug/
 # Frontend
 frontend/node_modules/
 frontend/dist/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # Backend
 backend/.pytest_cache/
@@ -206,6 +209,7 @@ data/cache/*
 
 # Ruff stuff:
 .ruff_cache/
+*.tsbuildinfo
 
 # PyPI configuration file
 .pypirc

@@ -6,14 +6,14 @@
 
 ```text
 .
-├── backend
-├── data
-│   ├── cache
-│   ├── generated
-│   └── profiles
-├── docs
-├── frontend
-└── scripts
+|-- backend
+|-- data
+|   |-- cache
+|   |-- generated
+|   `-- profiles
+|-- docs
+|-- frontend
+`-- scripts
 ```
 
 ## Setup
@@ -103,7 +103,7 @@ Backend:
 
 ```powershell
 Set-Location .\backend
-..\ .venv\Scripts\python.exe -m pytest
+..\.venv\Scripts\python.exe -m pytest
 ```
 
 Frontend:
