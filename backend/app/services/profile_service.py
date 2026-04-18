@@ -169,8 +169,13 @@ class ProfileService:
             raise AppError("Profile has no reference clips.", 400, "missing_reference_audio")
         return Path(profile.clips[0].normalized_path)
 
+    def conditioning_clip_paths(self, profile: Profile) -> list[Path]:
+        # Use the selected primary clip as the single conditioning source in v1.
+        # Mixing all stored clips produced muddy speaker identity too often.
+        return [self.primary_clip_path(profile)]
+
     def clip_fingerprint(self, profile: Profile) -> str | None:
-        paths = self.normalized_clip_paths(profile)
+        paths = self.conditioning_clip_paths(profile)
         if not paths:
             return None
         return compute_profile_fingerprint(paths)

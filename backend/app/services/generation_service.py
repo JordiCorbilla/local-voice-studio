@@ -96,7 +96,7 @@ class GenerationService:
                 prepared = PreparedProfile(
                     profile_id=profile.id,
                     language=profile.language_preference,
-                    reference_paths=self.profile_service.normalized_clip_paths(profile),
+                    reference_paths=self.profile_service.conditioning_clip_paths(profile),
                     primary_reference_path=self.profile_service.primary_clip_path(profile),
                     conditioning_artifact_path=Path(profile.conditioning_artifact_path) if profile.conditioning_artifact_path else None,
                     conditioning_fingerprint=fingerprint,

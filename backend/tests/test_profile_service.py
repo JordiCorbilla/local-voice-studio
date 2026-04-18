@@ -59,3 +59,4 @@ def test_profile_service_invalidates_conditioning_and_primary_clip(settings, tmp
         profile = service.set_primary_clip(session, profile.id, second.id)
         assert any(clip.id == second.id and clip.is_primary for clip in profile.clips)
         assert profile.conditioning_artifact_path is None
+        assert service.conditioning_clip_paths(profile) == [Path(second.normalized_path)]
