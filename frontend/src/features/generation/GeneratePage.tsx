@@ -81,6 +81,13 @@ export function GeneratePage() {
     queryKey: ["generations", profileId],
     queryFn: () => api.getGenerations(profileId || undefined),
   });
+  const selectedProfileQuery = useQuery({
+    queryKey: ["profile", profileId],
+    queryFn: () => api.getProfile(profileId),
+    enabled: Boolean(profileId),
+  });
+  const primaryClip = selectedProfileQuery.data?.clips.find((clip) => clip.is_primary);
+  const primaryTranscriptMissing = Boolean(selectedProfileQuery.data && !primaryClip?.reference_text?.trim());
 
   return (
     <div className="page">
@@ -110,6 +117,12 @@ export function GeneratePage() {
               <p className="muted">
                 Recommended text: <span className="guidance-text">{recommendedTestText}</span>
               </p>
+              {primaryTranscriptMissing ? (
+                <p className="error-text">
+                  The selected primary reference clip has no saved transcript. Qwen3-TTS requires the exact words spoken
+                  in that clip before generation.
+                </p>
+              ) : null}
             </div>
             <div className="form-grid two">
               <div className="field">
@@ -166,7 +179,7 @@ export function GeneratePage() {
                 <button
                   className="button primary"
                   type="button"
-                  disabled={createGeneration.isPending || !profileId}
+                  disabled={createGeneration.isPending || !profileId || primaryTranscriptMissing}
                   onClick={() =>
                     createGeneration.mutate({
                       profile_id: profileId,
