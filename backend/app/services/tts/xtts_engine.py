@@ -11,6 +11,7 @@ from typing import Any
 from app.core.config import Settings
 from app.core.errors import AppError
 from app.services.tts.base import PreparedProfile, SynthesisPayload
+from app.utils.torch_compat import patch_torch_load_for_coqui
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class XttsEngine:
             raise AppError(f"Failed to import XTTS runtime: {exc}", 503, "tts_import_failed")
 
         self._torch = torch
+        patch_torch_load_for_coqui(torch)
         self._device = "cuda" if torch.cuda.is_available() else "cpu"
 
         try:

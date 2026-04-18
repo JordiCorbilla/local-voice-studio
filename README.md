@@ -42,6 +42,14 @@ The default setup keeps XTTS optional so the rest of the app can run and test wi
 .\.venv\Scripts\python.exe .\scripts\prefetch-model.py
 ```
 
+If XTTS install pulled `transformers` 5.x, force a compatible 4.x release and rerun the prefetch:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install "transformers>=4.43,<4.47" --upgrade --force-reinstall
+.\.venv\Scripts\python.exe -m pip install "numpy==1.22.0" --upgrade --force-reinstall
+.\.venv\Scripts\python.exe .\scripts\prefetch-model.py
+```
+
 ## Run locally
 
 Start the backend:
@@ -118,6 +126,7 @@ npm.cmd run test
 - If `npm` fails in PowerShell due to execution policy, use `npm.cmd`.
 - If uploads fail, verify both `ffmpeg` and `ffprobe` are available on `PATH`.
 - If XTTS is unavailable in diagnostics, install the backend `xtts` extra and prefetch the model.
+- If XTTS fails with `BeamSearchScorer` import errors, your `transformers` install is too new; reinstall `transformers>=4.43,<4.47`.
 - CPU synthesis works but will be substantially slower than CUDA on long inputs.
 
 ## Privacy

@@ -19,6 +19,8 @@ dev = [
 ]
 xtts = [
   "TTS>=0.22.0",
+  "transformers>=4.43,<4.47",
+  "numpy==1.22.0; python_version <= '3.10'",
 ]
 
 [build-system]
