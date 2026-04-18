@@ -127,6 +127,7 @@ npm.cmd run test
 - If uploads fail, verify both `ffmpeg` and `ffprobe` are available on `PATH`.
 - If XTTS is unavailable in diagnostics, install the backend `xtts` extra and prefetch the model.
 - If XTTS fails with `BeamSearchScorer` import errors, your `transformers` install is too new; reinstall `transformers>=4.43,<4.47`.
+- If XTTS complains about `TorchCodec is required for load_with_torchcodec`, update to the latest project code. The backend now patches XTTS to read the app's normalized WAV references without requiring `torchcodec`.
 - CPU synthesis works but will be substantially slower than CUDA on long inputs.
 
 ## Privacy

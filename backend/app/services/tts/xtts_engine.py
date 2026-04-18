@@ -12,6 +12,7 @@ from app.core.config import Settings
 from app.core.errors import AppError
 from app.services.tts.base import PreparedProfile, SynthesisPayload
 from app.utils.torch_compat import patch_torch_load_for_coqui
+from app.utils.xtts_compat import patch_xtts_audio_loader
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class XttsEngine:
 
         self._torch = torch
         patch_torch_load_for_coqui(torch)
+        patch_xtts_audio_loader()
         self._device = "cuda" if torch.cuda.is_available() else "cpu"
 
         try:
