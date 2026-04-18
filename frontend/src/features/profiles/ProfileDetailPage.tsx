@@ -96,6 +96,19 @@ export function ProfileDetailPage() {
           </SectionCard>
 
           <SectionCard title="Reference clips" description="Upload normalized voice references or record a new one.">
+            <div className="guidance-card">
+              <strong>Similarity checklist</strong>
+              <div className="pill-row">
+                <span className="pill">1 primary clip</span>
+                <span className="pill">15 to 30 seconds</span>
+                <span className="pill">quiet room</span>
+                <span className="pill">steady natural tone</span>
+              </div>
+              <p className="muted">
+                XTTS zero-shot is much more sensitive to clip quality than clip quantity. Start with one clean primary
+                reference and only add alternates if they sound equally close to your real voice.
+              </p>
+            </div>
             <div className="reference-script-block">
               <div className="split-header">
                 <div>

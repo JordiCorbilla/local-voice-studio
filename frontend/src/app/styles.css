@@ -420,6 +420,23 @@ summary {
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+.guidance-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(125, 211, 252, 0.06);
+  border: 1px solid rgba(125, 211, 252, 0.14);
+}
+
+.guidance-card p {
+  margin: 0;
+}
+
+.guidance-text {
+  color: var(--text);
+}
+
 .reference-script-block,
 .reference-script-list,
 .reference-script-card {

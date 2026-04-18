@@ -17,12 +17,12 @@ const defaultValues: ProfileFormValues = {
   tags: "",
   avatar_color: "#7dd3fc",
   synthesis_defaults: {
-    temperature: 0.75,
+    temperature: 0.55,
     speed: 1,
     length_penalty: 1,
-    repetition_penalty: 2,
-    top_k: 50,
-    top_p: 0.85,
+    repetition_penalty: 2.2,
+    top_k: 40,
+    top_p: 0.75,
     enable_text_splitting: true,
   },
 };

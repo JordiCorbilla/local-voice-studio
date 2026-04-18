@@ -8,15 +8,18 @@ import { StatusBadge } from "../../components/StatusBadge";
 import { formatDate } from "../../lib/format";
 import type { ProfileDefaults } from "../../types/api";
 
-const defaultParameters: ProfileDefaults = {
-  temperature: 0.75,
+const similarityPreset: ProfileDefaults = {
+  temperature: 0.55,
   speed: 1,
   length_penalty: 1,
-  repetition_penalty: 2,
-  top_k: 50,
-  top_p: 0.85,
+  repetition_penalty: 2.2,
+  top_k: 40,
+  top_p: 0.75,
   enable_text_splitting: true,
 };
+
+const recommendedTestText =
+  "This is a short similarity test. I speak calmly, clearly, and at a natural pace.";
 
 export function GeneratePage() {
   const queryClient = useQueryClient();
@@ -25,7 +28,7 @@ export function GeneratePage() {
   const [language, setLanguage] = useState("en");
   const [inputText, setInputText] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [parameters, setParameters] = useState<ProfileDefaults>(defaultParameters);
+  const [parameters, setParameters] = useState<ProfileDefaults>(similarityPreset);
   const [activeGenerationId, setActiveGenerationId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -87,6 +90,25 @@ export function GeneratePage() {
       <div className="workspace-grid">
         <SectionCard title="Generation workspace" description="Focused text-to-speech workspace.">
           <div className="form-grid">
+            <div className="guidance-card">
+              <div className="split-header">
+                <div>
+                  <strong>Start with a similarity check</strong>
+                  <p className="muted">Use one strong primary clip and a short sentence before testing longer text.</p>
+                </div>
+                <div className="inline-actions">
+                  <button className="button subtle" type="button" onClick={() => setParameters(similarityPreset)}>
+                    Use similarity preset
+                  </button>
+                  <button className="button subtle" type="button" onClick={() => setInputText(recommendedTestText)}>
+                    Load test text
+                  </button>
+                </div>
+              </div>
+              <p className="muted">
+                Recommended text: <span className="guidance-text">{recommendedTestText}</span>
+              </p>
+            </div>
             <div className="form-grid two">
               <div className="field">
                 <label htmlFor="profile">Voice profile</label>
@@ -129,14 +151,15 @@ export function GeneratePage() {
               <button className="button subtle" type="button" onClick={() => setShowAdvanced((current) => !current)}>
                 {showAdvanced ? "Hide advanced" : "Show advanced"}
               </button>
-              <button
-                className="button primary"
-                type="button"
-                onClick={() => createGeneration.mutate({ profile_id: profileId, input_text: inputText, language, parameters })}
-              >
-                Generate audio
-              </button>
-            </div>
+                <button
+                  className="button primary"
+                  type="button"
+                  disabled={createGeneration.isPending || !profileId}
+                  onClick={() => createGeneration.mutate({ profile_id: profileId, input_text: inputText, language, parameters })}
+                >
+                  {createGeneration.isPending ? "Starting..." : "Generate audio"}
+                </button>
+              </div>
             {showAdvanced ? (
               <div className="advanced-grid">
                 <div className="form-grid two">
