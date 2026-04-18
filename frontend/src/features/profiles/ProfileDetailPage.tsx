@@ -9,6 +9,19 @@ import { formatDate, formatDuration } from "../../lib/format";
 import { ProfileForm, type ProfileFormValues } from "./ProfileForm";
 import { RecorderPanel } from "./RecorderPanel";
 
+const referenceScripts = [
+  {
+    label: "Balanced read",
+    text:
+      "Hello, this is a voice reference for Local Voice Studio. I am speaking in a calm, natural tone at a steady pace. Today the weather is mild, and the streets are busy with people heading to work, school, and home. I enjoy clear communication, careful pronunciation, and relaxed conversation. This sample includes short and long words, different sentence shapes, and a normal speaking rhythm.",
+  },
+  {
+    label: "Natural intro",
+    text:
+      "Good morning. My name is [your name], and this is another clean voice sample. I am reading in my usual speaking style, without rushing or exaggerating. The purpose of this recording is to capture my natural accent, pitch, and cadence. I would like the generated voice to sound clear, grounded, and consistent across everyday sentences.",
+  },
+];
+
 function toPayload(values: ProfileFormValues) {
   return {
     ...values,
@@ -83,6 +96,33 @@ export function ProfileDetailPage() {
           </SectionCard>
 
           <SectionCard title="Reference clips" description="Upload normalized voice references or record a new one.">
+            <div className="reference-script-block">
+              <div className="split-header">
+                <div>
+                  <strong>Suggested reference text</strong>
+                  <p className="muted">Read one prompt naturally for 15 to 30 seconds in a quiet room.</p>
+                </div>
+              </div>
+              <div className="reference-script-list">
+                {referenceScripts.map((script) => (
+                  <div key={script.label} className="reference-script-card">
+                    <div className="split-header">
+                      <span className="pill">{script.label}</span>
+                      <button
+                        className="button subtle"
+                        type="button"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(script.text);
+                        }}
+                      >
+                        Copy text
+                      </button>
+                    </div>
+                    <p>{script.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="button-row">
               <label className="button subtle">
                 Upload clip

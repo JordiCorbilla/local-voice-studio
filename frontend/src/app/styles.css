@@ -420,6 +420,25 @@ summary {
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+.reference-script-block,
+.reference-script-list,
+.reference-script-card {
+  display: grid;
+  gap: 12px;
+}
+
+.reference-script-card {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.reference-script-card p {
+  margin: 0;
+  color: var(--text);
+}
+
 .split-header {
   display: flex;
   justify-content: space-between;
