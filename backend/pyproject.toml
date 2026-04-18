@@ -1,7 +1,7 @@
 [project]
 name = "local-voice-studio-backend"
 version = "0.1.0"
-description = "FastAPI backend for local-first voice cloning and XTTS synthesis."
+description = "FastAPI backend for local-first voice cloning with pluggable local TTS engines."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -21,6 +21,12 @@ xtts = [
   "TTS>=0.22.0",
   "transformers>=4.43,<4.47",
   "numpy==1.22.0; python_version <= '3.10'",
+]
+qwen = [
+  "qwen-tts>=0.0.5",
+]
+transcription = [
+  "faster-whisper>=1.1.1",
 ]
 
 [build-system]

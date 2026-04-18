@@ -75,6 +75,7 @@ class XttsEngine:
                 language=profile.language,
                 reference_paths=profile.reference_paths,
                 primary_reference_path=profile.primary_reference_path,
+                primary_reference_text=profile.primary_reference_text,
                 conditioning_artifact_path=artifact_path,
                 conditioning_fingerprint=profile.conditioning_fingerprint,
             )
@@ -84,6 +85,7 @@ class XttsEngine:
             language=profile.language,
             reference_paths=profile.reference_paths,
             primary_reference_path=profile.primary_reference_path,
+            primary_reference_text=profile.primary_reference_text,
             conditioning_artifact_path=artifact_path if artifact_path.exists() else None,
             conditioning_fingerprint=profile.conditioning_fingerprint,
         )
@@ -120,6 +122,7 @@ class XttsEngine:
 
         return {
             "engine_name": self.name,
+            "active_engine": self.settings.tts_engine,
             "model_name": self.settings.xtts_model_name,
             "engine_ready": self.is_ready(),
             "model_loaded": self._model is not None,

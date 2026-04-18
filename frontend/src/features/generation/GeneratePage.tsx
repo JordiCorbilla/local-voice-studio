@@ -27,6 +27,8 @@ export function GeneratePage() {
   const [profileId, setProfileId] = useState("");
   const [language, setLanguage] = useState("en");
   const [inputText, setInputText] = useState("");
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [seed, setSeed] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [parameters, setParameters] = useState<ProfileDefaults>(similarityPreset);
   const [activeGenerationId, setActiveGenerationId] = useState<string | null>(null);
@@ -147,6 +149,16 @@ export function GeneratePage() {
                 placeholder="Enter the text you want synthesized..."
               />
             </div>
+            <div className="field">
+              <label htmlFor="delivery_instructions">Delivery instructions</label>
+              <textarea
+                id="delivery_instructions"
+                value={deliveryInstructions}
+                onChange={(event) => setDeliveryInstructions(event.target.value)}
+                placeholder="Optional. Calm, warm, measured, lightly emphatic..."
+              />
+              <p className="help">Used by engines that support instruction-style delivery control.</p>
+            </div>
             <div className="button-row">
               <button className="button subtle" type="button" onClick={() => setShowAdvanced((current) => !current)}>
                 {showAdvanced ? "Hide advanced" : "Show advanced"}
@@ -155,7 +167,16 @@ export function GeneratePage() {
                   className="button primary"
                   type="button"
                   disabled={createGeneration.isPending || !profileId}
-                  onClick={() => createGeneration.mutate({ profile_id: profileId, input_text: inputText, language, parameters })}
+                  onClick={() =>
+                    createGeneration.mutate({
+                      profile_id: profileId,
+                      input_text: inputText,
+                      language,
+                      delivery_instructions: deliveryInstructions || undefined,
+                      seed: seed.trim() ? Number(seed) : undefined,
+                      parameters,
+                    })
+                  }
                 >
                   {createGeneration.isPending ? "Starting..." : "Generate audio"}
                 </button>
@@ -210,6 +231,18 @@ export function GeneratePage() {
                     />
                   </div>
                 </div>
+                <div className="form-grid two">
+                  <div className="field">
+                    <label htmlFor="seed">Seed</label>
+                    <input
+                      id="seed"
+                      type="number"
+                      value={seed}
+                      onChange={(event) => setSeed(event.target.value)}
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
               </div>
             ) : null}
             {error ? <p className="error-text">{error}</p> : null}
@@ -224,7 +257,12 @@ export function GeneratePage() {
                   <strong>{generationQuery.data.input_text.slice(0, 80)}</strong>
                   <StatusBadge status={generationQuery.data.status} />
                 </div>
-                <p className="muted">{formatDate(generationQuery.data.created_at)}</p>
+                <p className="muted">
+                  {generationQuery.data.engine_name} | {formatDate(generationQuery.data.created_at)}
+                </p>
+                {generationQuery.data.delivery_instructions ? (
+                  <p className="muted">Delivery: {generationQuery.data.delivery_instructions}</p>
+                ) : null}
                 {generationQuery.data.output_url ? (
                   <>
                     <AudioPlayer src={generationQuery.data.output_url} />
@@ -251,6 +289,7 @@ export function GeneratePage() {
                       <strong>{generation.input_text.slice(0, 64)}</strong>
                       <StatusBadge status={generation.status} />
                     </div>
+                    <p className="muted">{generation.engine_name}</p>
                     {generation.output_url ? <AudioPlayer src={generation.output_url} /> : null}
                   </div>
                 ))}

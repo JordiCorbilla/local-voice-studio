@@ -15,6 +15,8 @@ from app.services.tts.base import PreparedProfile, SynthesisPayload
 
 
 class FakeEngine:
+    name = "fake-engine"
+
     def __init__(self) -> None:
         self.loaded = False
 
@@ -44,6 +46,7 @@ class FakeEngine:
     def get_runtime_info(self) -> dict:
         return {
             "engine_name": "fake-engine",
+            "active_engine": "fake-engine",
             "model_name": "fake-model",
             "engine_ready": self.loaded,
             "model_loaded": self.loaded,
@@ -55,6 +58,8 @@ class FakeEngine:
             "torch_version": None,
             "tts_package_installed": False,
             "last_error": None,
+            "transcription_available": False,
+            "transcription_model": "base",
             "extras": {},
         }
 

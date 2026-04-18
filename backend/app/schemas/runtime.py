@@ -15,6 +15,7 @@ class HealthStatus(ApiModel):
 class RuntimeInfo(ApiModel):
     model_name: str
     engine_name: str
+    active_engine: str
     engine_ready: bool
     model_loaded: bool
     weights_available: bool
@@ -28,4 +29,6 @@ class RuntimeInfo(ApiModel):
     ffprobe_available: bool
     directories: dict[str, str]
     last_error: str | None
+    transcription_available: bool | None = None
+    transcription_model: str | None = None
     extras: dict[str, Any]

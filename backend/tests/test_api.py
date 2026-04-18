@@ -114,3 +114,38 @@ def test_invalid_audio_upload_rejected(client):
         files={"file": ("bad.txt", b"not audio", "text/plain")},
     )
     assert response.status_code == 400
+
+
+def test_clip_transcript_can_be_saved(client):
+    profile_response = client.post(
+        "/api/profiles",
+        json={
+            "display_name": "Voice",
+            "notes": "",
+            "language_preference": "en",
+            "tags": [],
+            "avatar_color": "#7dd3fc",
+            "synthesis_defaults": {
+                "temperature": 0.55,
+                "speed": 1.0,
+                "length_penalty": 1.0,
+                "repetition_penalty": 2.2,
+                "top_k": 40,
+                "top_p": 0.75,
+                "enable_text_splitting": True,
+            },
+        },
+    )
+    profile_id = profile_response.json()["id"]
+    upload_response = client.post(
+        f"/api/profiles/{profile_id}/clips/upload",
+        files={"file": ("reference.wav", make_test_wav_bytes(), "audio/wav")},
+    )
+    clip_id = upload_response.json()["id"]
+
+    transcript_response = client.patch(
+        f"/api/profiles/{profile_id}/clips/{clip_id}",
+        json={"reference_text": "This is the exact content of the reference clip."},
+    )
+    assert transcript_response.status_code == 200
+    assert transcript_response.json()["reference_text"] == "This is the exact content of the reference clip."

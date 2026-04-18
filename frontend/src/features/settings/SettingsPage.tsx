@@ -17,6 +17,10 @@ export function SettingsPage() {
           {runtimeQuery.data ? (
             <div className="key-value-list">
               <div>
+                <span>Active engine</span>
+                <strong>{runtimeQuery.data.active_engine}</strong>
+              </div>
+              <div>
                 <span>Model</span>
                 <strong>{runtimeQuery.data.model_name}</strong>
               </div>
@@ -39,6 +43,10 @@ export function SettingsPage() {
               <div>
                 <span>FFmpeg</span>
                 <strong>{runtimeQuery.data.ffmpeg_available ? "available" : "missing"}</strong>
+              </div>
+              <div>
+                <span>Transcription</span>
+                <strong>{runtimeQuery.data.transcription_available ? runtimeQuery.data.transcription_model : "missing"}</strong>
               </div>
             </div>
           ) : (

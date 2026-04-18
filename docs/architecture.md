@@ -8,7 +8,9 @@
 - Services coordinate repositories, audio normalization, file lifecycle, and TTS orchestration.
 - Metadata lives in SQLite.
 - Audio, generated WAV files, and conditioning cache artifacts live under `data/`.
-- `TtsEngine` is the adapter boundary; `XttsEngine` is the first implementation.
+- `TtsEngine` is the adapter boundary; `XttsEngine` and `Qwen3Engine` sit behind the same generation service.
+- Reference clips now persist an optional `reference_text` transcript so transcript-aware engines can reuse the primary clip without re-entering metadata each run.
+- A lightweight local transcription service can populate clip transcripts when the optional backend transcription extra is installed.
 
 ## Frontend
 

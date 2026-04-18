@@ -61,9 +61,18 @@ class GenerationService:
             profile_id=payload.profile_id,
             input_text=payload.input_text.strip(),
             language=payload.language or profile.language_preference,
+            engine_name=self.tts_engine.name,
+            delivery_instructions=(payload.delivery_instructions or "").strip() or None,
+            seed=payload.seed,
             parameters_json=dumps(parameters),
             status="queued",
         )
+        if self.tts_engine.name == "qwen3-tts" and not self.profile_service.primary_clip_reference_text(profile):
+            raise AppError(
+                "Qwen3 voice cloning requires a transcript for the selected primary reference clip.",
+                400,
+                "missing_reference_transcript",
+            )
         self.generations.create(session, record)
         session.commit()
         session.refresh(record)
@@ -98,6 +107,7 @@ class GenerationService:
                     language=profile.language_preference,
                     reference_paths=self.profile_service.conditioning_clip_paths(profile),
                     primary_reference_path=self.profile_service.primary_clip_path(profile),
+                    primary_reference_text=self.profile_service.primary_clip_reference_text(profile),
                     conditioning_artifact_path=Path(profile.conditioning_artifact_path) if profile.conditioning_artifact_path else None,
                     conditioning_fingerprint=fingerprint,
                 )
@@ -112,6 +122,8 @@ class GenerationService:
                 synthesis_payload = SynthesisPayload(
                     text=record.input_text,
                     language=record.language,
+                    delivery_instructions=record.delivery_instructions,
+                    seed=record.seed,
                     parameters=loads(record.parameters_json, {}),
                 )
                 self.tts_engine.synthesize(prepared, synthesis_payload, output_path)

@@ -18,10 +18,16 @@ class ReferenceClip(ApiModel):
     sample_rate: int
     channels: int
     is_primary: bool
+    reference_text: str
+    transcript_source: str | None
     created_at: datetime
     original_file: str
     normalized_file: str
     audio_url: str
+
+
+class ClipTranscriptUpdate(BaseModel):
+    reference_text: str = Field(min_length=1, max_length=5000)
 
 
 class ProfileCreate(BaseModel):

@@ -17,6 +17,8 @@ export type ReferenceClip = {
   sample_rate: number;
   channels: number;
   is_primary: boolean;
+  reference_text: string;
+  transcript_source: string | null;
   created_at: string;
   original_file: string;
   normalized_file: string;
@@ -28,6 +30,9 @@ export type GenerationRecord = {
   profile_id: string;
   input_text: string;
   language: string;
+  engine_name: string;
+  delivery_instructions: string | null;
+  seed: number | null;
   parameters: ProfileDefaults;
   output_file: string | null;
   output_url: string | null;
@@ -60,6 +65,7 @@ export type ProfileDetail = ProfileSummary & {
 export type RuntimeInfo = {
   model_name: string;
   engine_name: string;
+  active_engine: string;
   engine_ready: boolean;
   model_loaded: boolean;
   weights_available: boolean;
@@ -73,6 +79,8 @@ export type RuntimeInfo = {
   ffprobe_available: boolean;
   directories: Record<string, string>;
   last_error: string | null;
+  transcription_available: boolean | null;
+  transcription_model: string | null;
   extras: Record<string, unknown>;
 };
 

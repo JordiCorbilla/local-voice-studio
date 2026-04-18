@@ -91,6 +91,13 @@ class ProfileService:
         self.get_profile(session, profile_id)
         return self.clips.list_for_profile(session, profile_id)
 
+    def get_clip(self, session: Session, profile_id: str, clip_id: str) -> ReferenceClip:
+        self.get_profile(session, profile_id)
+        clip = self.clips.get(session, clip_id)
+        if not clip or clip.profile_id != profile_id:
+            raise NotFoundError("Reference clip not found.")
+        return clip
+
     def add_clip(
         self,
         session: Session,
@@ -120,8 +127,31 @@ class ProfileService:
             sample_rate=stored.metadata.sample_rate,
             channels=stored.metadata.channels,
             is_primary=not existing_clips,
+            reference_text="",
+            transcript_source=None,
         )
         self.clips.create(session, clip)
+        self._invalidate_conditioning(profile)
+        session.commit()
+        session.refresh(clip)
+        return clip
+
+    def update_clip_reference_text(
+        self,
+        session: Session,
+        *,
+        profile_id: str,
+        clip_id: str,
+        reference_text: str,
+        transcript_source: str = "manual",
+    ) -> ReferenceClip:
+        profile = self.get_profile(session, profile_id)
+        clip = self.get_clip(session, profile_id, clip_id)
+        cleaned = reference_text.strip()
+        if not cleaned:
+            raise AppError("Reference transcript cannot be empty.", 400, "empty_reference_transcript")
+        clip.reference_text = cleaned
+        clip.transcript_source = transcript_source
         self._invalidate_conditioning(profile)
         session.commit()
         session.refresh(clip)
@@ -169,6 +199,15 @@ class ProfileService:
             raise AppError("Profile has no reference clips.", 400, "missing_reference_audio")
         return Path(profile.clips[0].normalized_path)
 
+    def primary_clip_reference_text(self, profile: Profile) -> str | None:
+        primary = next((clip for clip in profile.clips if clip.is_primary), None)
+        if primary and primary.reference_text.strip():
+            return primary.reference_text.strip()
+        if not profile.clips:
+            return None
+        fallback = profile.clips[0].reference_text.strip()
+        return fallback or None
+
     def conditioning_clip_paths(self, profile: Profile) -> list[Path]:
         # Use the selected primary clip as the single conditioning source in v1.
         # Mixing all stored clips produced muddy speaker identity too often.
@@ -178,7 +217,10 @@ class ProfileService:
         paths = self.conditioning_clip_paths(profile)
         if not paths:
             return None
-        return compute_profile_fingerprint(paths)
+        return compute_profile_fingerprint(
+            paths,
+            extras={"primary_reference_text": self.primary_clip_reference_text(profile) or ""},
+        )
 
     def profile_tags(self, profile: Profile) -> list[str]:
         return loads(profile.tags_json, [])

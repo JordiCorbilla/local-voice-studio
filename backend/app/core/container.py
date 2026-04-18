@@ -4,13 +4,15 @@ from concurrent.futures import ThreadPoolExecutor
 
 from app.core.config import Settings
 from app.db.base import Base
+from app.db.migrations import run_startup_migrations
 from app.db.session import create_engine, create_session_factory
 from app.services.audio_service import AudioService
 from app.services.generation_service import GenerationService
 from app.services.profile_service import ProfileService
 from app.services.runtime_service import RuntimeService
+from app.services.transcription_service import TranscriptionService
 from app.services.tts.base import TtsEngine
-from app.services.tts.xtts_engine import XttsEngine
+from app.services.tts.factory import create_tts_engine
 
 
 class AppContainer:
@@ -21,7 +23,8 @@ class AppContainer:
         self.session_factory = create_session_factory(self.engine)
         self.executor = ThreadPoolExecutor(max_workers=self.settings.max_generation_workers)
         self.audio_service = AudioService(self.settings)
-        self.tts_engine = tts_engine or XttsEngine(self.settings)
+        self.tts_engine = tts_engine or create_tts_engine(self.settings)
+        self.transcription_service = TranscriptionService(self.settings)
         self.profile_service = ProfileService(self.settings, self.audio_service)
         self.generation_service = GenerationService(
             settings=self.settings,
@@ -30,10 +33,11 @@ class AppContainer:
             audio_service=self.audio_service,
             executor=self.executor,
         )
-        self.runtime_service = RuntimeService(self.settings, self.tts_engine)
+        self.runtime_service = RuntimeService(self.settings, self.tts_engine, self.transcription_service)
 
     def startup(self) -> None:
         Base.metadata.create_all(self.engine)
+        run_startup_migrations(self.engine)
 
     def shutdown(self) -> None:
         self.executor.shutdown(wait=False, cancel_futures=False)

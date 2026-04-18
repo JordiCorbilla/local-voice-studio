@@ -1,6 +1,6 @@
 # local-voice-studio
 
-`local-voice-studio` is a local-first voice cloning studio built around a React frontend and a FastAPI backend. It records or uploads reference clips, stores profile metadata in SQLite, keeps audio assets on disk, and runs local XTTS-based synthesis jobs without a cloud service.
+`local-voice-studio` is a local-first voice cloning studio built around a React frontend and a FastAPI backend. It records or uploads reference clips, stores profile metadata in SQLite, keeps audio assets on disk, and runs local synthesis jobs without a cloud service. The backend now supports a pluggable local TTS engine boundary with XTTS and an optional Qwen3-TTS path for transcript-aware voice cloning.
 
 ## Repository layout
 
@@ -23,7 +23,7 @@
 - Python 3.10+
 - Node.js 22+
 - FFmpeg and FFprobe on `PATH`
-- Optional NVIDIA CUDA setup for faster XTTS inference
+- Optional NVIDIA CUDA setup for faster XTTS or Qwen3-TTS inference
 
 ### Install
 
@@ -41,6 +41,29 @@ The default setup keeps XTTS optional so the rest of the app can run and test wi
 .\.venv\Scripts\python.exe -m pip install -e ".\backend[xtts]"
 .\.venv\Scripts\python.exe .\scripts\prefetch-model.py
 ```
+
+### Optional Qwen3-TTS install
+
+Qwen3-TTS is wired in as an alternate engine. The official Qwen docs currently recommend a fresh Python 3.12 environment, so this path may require a separate backend venv if your existing XTTS setup stays on Python 3.10.
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".\backend[qwen,transcription]"
+```
+
+Switch the backend to Qwen3-TTS with:
+
+```powershell
+$env:LVS_TTS_ENGINE = "qwen3"
+```
+
+Optional Qwen/Whisper-related env vars:
+
+- `LVS_QWEN_MODEL_NAME`
+- `LVS_QWEN_MODEL_DIR`
+- `LVS_QWEN_CACHE_DIR`
+- `LVS_WHISPER_MODEL_NAME`
+- `LVS_WHISPER_DEVICE`
+- `LVS_WHISPER_COMPUTE_TYPE`
 
 If XTTS install pulled `transformers` 5.x, force a compatible 4.x release and rerun the prefetch:
 
@@ -69,14 +92,21 @@ Open `http://localhost:5173`.
 ## Environment variables
 
 - `LVS_CORS_ORIGIN`
+- `LVS_TTS_ENGINE`
 - `LVS_DATA_DIR`
 - `LVS_DATABASE_PATH`
 - `LVS_PROFILES_DIR`
 - `LVS_GENERATED_DIR`
 - `LVS_CACHE_DIR`
 - `LVS_XTTS_CACHE_DIR`
+- `LVS_QWEN_CACHE_DIR`
 - `LVS_XTTS_MODEL_NAME`
 - `LVS_XTTS_MODEL_DIR`
+- `LVS_QWEN_MODEL_NAME`
+- `LVS_QWEN_MODEL_DIR`
+- `LVS_WHISPER_MODEL_NAME`
+- `LVS_WHISPER_DEVICE`
+- `LVS_WHISPER_COMPUTE_TYPE`
 - `LVS_FFMPEG_BIN`
 - `LVS_FFPROBE_BIN`
 - `LVS_MAX_GENERATION_WORKERS`
@@ -88,6 +118,7 @@ Open `http://localhost:5173`.
 - `data/profiles/{profile_id}/clips/{clip_id}/normalized.wav`: normalized internal reference
 - `data/generated/{generation_id}.wav`: generated outputs
 - `data/cache/xtts/{profile_id}/conditioning.pt`: cached conditioning artifacts when available
+- `data/cache/qwen3/{profile_id}/voice_clone_prompt.pkl`: cached Qwen3 voice-clone prompts when supported
 
 ## API summary
 
@@ -96,6 +127,8 @@ Open `http://localhost:5173`.
 - `GET /api/profiles/{id}/clips`
 - `POST /api/profiles/{id}/clips/upload`
 - `POST /api/profiles/{id}/clips/recording`
+- `PATCH /api/profiles/{id}/clips/{clip_id}`
+- `POST /api/profiles/{id}/clips/{clip_id}/transcribe`
 - `DELETE /api/profiles/{id}/clips/{clip_id}`
 - `POST /api/profiles/{id}/clips/{clip_id}/set-primary`
 - `GET/POST /api/generations`
@@ -128,6 +161,8 @@ npm.cmd run test
 - If XTTS is unavailable in diagnostics, install the backend `xtts` extra and prefetch the model.
 - If XTTS fails with `BeamSearchScorer` import errors, your `transformers` install is too new; reinstall `transformers>=4.43,<4.47`.
 - If XTTS complains about `TorchCodec is required for load_with_torchcodec`, update to the latest project code. The backend now patches XTTS to read the app's normalized WAV references without requiring `torchcodec`.
+- Qwen3-style cloning needs the transcript of the selected primary reference clip. Save it on the clip card before generating.
+- Local transcription requires the backend `transcription` extra; otherwise the transcript must be entered manually.
 - CPU synthesis works but will be substantially slower than CUDA on long inputs.
 
 ## Privacy

@@ -29,6 +29,8 @@ export type GenerationInput = {
   profile_id: string;
   input_text: string;
   language?: string;
+  delivery_instructions?: string;
+  seed?: number;
   parameters?: ProfileInput["synthesis_defaults"];
 };
 
@@ -103,6 +105,16 @@ export const api = {
     }),
   setPrimaryClip: (profileId: string, clipId: string) =>
     request<ProfileDetail>(`/api/profiles/${profileId}/clips/${clipId}/set-primary`, {
+      method: "POST",
+    }),
+  updateClipTranscript: (profileId: string, clipId: string, referenceText: string) =>
+    request<ReferenceClip>(`/api/profiles/${profileId}/clips/${clipId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference_text: referenceText }),
+    }),
+  transcribeClip: (profileId: string, clipId: string) =>
+    request<ReferenceClip>(`/api/profiles/${profileId}/clips/${clipId}/transcribe`, {
       method: "POST",
     }),
   getGenerations: (profileId?: string) =>

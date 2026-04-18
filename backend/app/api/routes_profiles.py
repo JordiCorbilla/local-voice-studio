@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
@@ -7,7 +9,14 @@ from app.api.dependencies import get_container, get_db_session
 from app.api.mappers import map_clip, map_profile_detail, map_profile_summary
 from app.core.container import AppContainer
 from app.core.errors import AppError
-from app.schemas.profile import ProfileCreate, ProfileDetail, ProfileSummary, ProfileUpdate, ReferenceClip
+from app.schemas.profile import (
+    ClipTranscriptUpdate,
+    ProfileCreate,
+    ProfileDetail,
+    ProfileSummary,
+    ProfileUpdate,
+    ReferenceClip,
+)
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -152,5 +161,50 @@ def set_primary_clip(
     try:
         profile = container.profile_service.set_primary_clip(session, profile_id, clip_id)
         return map_profile_detail(profile)
+    except AppError as exc:
+        raise _translate_error(exc) from exc
+
+
+@router.patch("/{profile_id}/clips/{clip_id}", response_model=ReferenceClip)
+def update_clip_transcript(
+    profile_id: str,
+    clip_id: str,
+    payload: ClipTranscriptUpdate,
+    session: Session = Depends(get_db_session),
+    container: AppContainer = Depends(get_container),
+):
+    try:
+        clip = container.profile_service.update_clip_reference_text(
+            session,
+            profile_id=profile_id,
+            clip_id=clip_id,
+            reference_text=payload.reference_text,
+        )
+        return map_clip(clip)
+    except AppError as exc:
+        raise _translate_error(exc) from exc
+
+
+@router.post("/{profile_id}/clips/{clip_id}/transcribe", response_model=ReferenceClip)
+def transcribe_clip(
+    profile_id: str,
+    clip_id: str,
+    session: Session = Depends(get_db_session),
+    container: AppContainer = Depends(get_container),
+):
+    try:
+        clip = container.profile_service.get_clip(session, profile_id, clip_id)
+        transcript = container.transcription_service.transcribe(
+            Path(clip.normalized_path),
+            language=container.profile_service.get_profile(session, profile_id).language_preference,
+        )
+        clip = container.profile_service.update_clip_reference_text(
+            session,
+            profile_id=profile_id,
+            clip_id=clip_id,
+            reference_text=transcript,
+            transcript_source="transcribed",
+        )
+        return map_clip(clip)
     except AppError as exc:
         raise _translate_error(exc) from exc

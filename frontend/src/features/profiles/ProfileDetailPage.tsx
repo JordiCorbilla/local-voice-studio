@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { AudioPlayer } from "../../components/AudioPlayer";
@@ -35,6 +36,7 @@ function toPayload(values: ProfileFormValues) {
 export function ProfileDetailPage() {
   const { profileId = "" } = useParams();
   const queryClient = useQueryClient();
+  const [clipDrafts, setClipDrafts] = useState<Record<string, string>>({});
   const profileQuery = useQuery({
     queryKey: ["profile", profileId],
     queryFn: () => api.getProfile(profileId),
@@ -65,6 +67,15 @@ export function ProfileDetailPage() {
   });
   const setPrimary = useMutation({
     mutationFn: (clipId: string) => api.setPrimaryClip(profileId, clipId),
+    onSuccess: refresh,
+  });
+  const updateTranscript = useMutation({
+    mutationFn: ({ clipId, referenceText }: { clipId: string; referenceText: string }) =>
+      api.updateClipTranscript(profileId, clipId, referenceText),
+    onSuccess: refresh,
+  });
+  const transcribeClip = useMutation({
+    mutationFn: (clipId: string) => api.transcribeClip(profileId, clipId),
     onSuccess: refresh,
   });
 
@@ -107,6 +118,10 @@ export function ProfileDetailPage() {
               <p className="muted">
                 XTTS zero-shot is much more sensitive to clip quality than clip quantity. Start with one clean primary
                 reference and only add alternates if they sound equally close to your real voice.
+              </p>
+              <p className="muted">
+                Qwen-style cloning also wants the transcript of the selected primary clip. Paste exactly what you said,
+                or use local transcription if available.
               </p>
             </div>
             <div className="reference-script-block">
@@ -167,12 +182,48 @@ export function ProfileDetailPage() {
                       {clip.is_primary ? <span className="pill">Primary</span> : null}
                     </div>
                     <AudioPlayer src={clip.audio_url} />
+                    <div className="field">
+                      <label htmlFor={`clip-transcript-${clip.id}`}>Reference transcript</label>
+                      <textarea
+                        id={`clip-transcript-${clip.id}`}
+                        value={clipDrafts[clip.id] ?? clip.reference_text}
+                        onChange={(event) =>
+                          setClipDrafts((current) => ({
+                            ...current,
+                            [clip.id]: event.target.value,
+                          }))
+                        }
+                        placeholder="Paste the exact words spoken in this reference clip..."
+                      />
+                      <p className="help">
+                        {clip.transcript_source === "transcribed"
+                          ? "Transcript source: local transcription"
+                          : clip.transcript_source === "manual"
+                            ? "Transcript source: manual"
+                            : "No transcript saved yet"}
+                      </p>
+                    </div>
                     <div className="button-row">
                       {!clip.is_primary ? (
                         <button className="button subtle" type="button" onClick={() => setPrimary.mutate(clip.id)}>
                           Set primary
                         </button>
                       ) : null}
+                      <button
+                        className="button subtle"
+                        type="button"
+                        onClick={() =>
+                          updateTranscript.mutate({
+                            clipId: clip.id,
+                            referenceText: (clipDrafts[clip.id] ?? clip.reference_text).trim(),
+                          })
+                        }
+                      >
+                        Save transcript
+                      </button>
+                      <button className="button subtle" type="button" onClick={() => transcribeClip.mutate(clip.id)}>
+                        Transcribe locally
+                      </button>
                       <button className="button danger" type="button" onClick={() => deleteClip.mutate(clip.id)}>
                         Remove clip
                       </button>

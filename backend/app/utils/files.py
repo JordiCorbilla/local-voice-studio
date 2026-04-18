@@ -17,7 +17,7 @@ def safe_rmtree(path: Path | None) -> None:
         shutil.rmtree(path, ignore_errors=True)
 
 
-def compute_profile_fingerprint(paths: list[Path]) -> str:
+def compute_profile_fingerprint(paths: list[Path], extras: dict[str, object] | None = None) -> str:
     payload: list[dict[str, object]] = []
     for path in sorted(paths):
         stat = path.stat()
@@ -28,6 +28,8 @@ def compute_profile_fingerprint(paths: list[Path]) -> str:
                 "mtime_ns": stat.st_mtime_ns,
             }
         )
+    if extras:
+        payload.append({"extras": extras})
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
 
 

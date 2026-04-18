@@ -11,6 +11,7 @@ class PreparedProfile:
     language: str
     reference_paths: list[Path]
     primary_reference_path: Path
+    primary_reference_text: str | None
     conditioning_artifact_path: Path | None
     conditioning_fingerprint: str
 
@@ -19,6 +20,8 @@ class PreparedProfile:
 class SynthesisPayload:
     text: str
     language: str
+    delivery_instructions: str | None
+    seed: int | None
     parameters: dict[str, Any]
 
 
