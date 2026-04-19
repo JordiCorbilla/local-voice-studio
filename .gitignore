@@ -228,3 +228,4 @@ __marimo__/
 backend/data/app.db
 /backend/data
 data/app.db
+docs/blog-post.md
