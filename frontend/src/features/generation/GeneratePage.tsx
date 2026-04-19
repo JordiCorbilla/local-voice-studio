@@ -88,6 +88,8 @@ export function GeneratePage() {
   });
   const primaryClip = selectedProfileQuery.data?.clips.find((clip) => clip.is_primary);
   const primaryTranscriptMissing = Boolean(selectedProfileQuery.data && !primaryClip?.reference_text?.trim());
+  const activeStatus = generationQuery.data?.status;
+  const generationRunning = createGeneration.isPending || activeStatus === "queued" || activeStatus === "running";
 
   return (
     <div className="page">
@@ -176,24 +178,31 @@ export function GeneratePage() {
               <button className="button subtle" type="button" onClick={() => setShowAdvanced((current) => !current)}>
                 {showAdvanced ? "Hide advanced" : "Show advanced"}
               </button>
-                <button
-                  className="button primary"
-                  type="button"
-                  disabled={createGeneration.isPending || !profileId || primaryTranscriptMissing}
-                  onClick={() =>
-                    createGeneration.mutate({
-                      profile_id: profileId,
-                      input_text: inputText,
-                      language,
-                      delivery_instructions: deliveryInstructions || undefined,
-                      seed: seed.trim() ? Number(seed) : undefined,
-                      parameters,
-                    })
-                  }
-                >
-                  {createGeneration.isPending ? "Starting..." : "Generate audio"}
-                </button>
-              </div>
+              <button
+                className="button primary"
+                type="button"
+                disabled={generationRunning || !profileId || primaryTranscriptMissing}
+                onClick={() =>
+                  createGeneration.mutate({
+                    profile_id: profileId,
+                    input_text: inputText,
+                    language,
+                    delivery_instructions: deliveryInstructions || undefined,
+                    seed: seed.trim() ? Number(seed) : undefined,
+                    parameters,
+                  })
+                }
+              >
+                {generationRunning ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" />
+                    Generating...
+                  </>
+                ) : (
+                  "Generate audio"
+                )}
+              </button>
+            </div>
             {showAdvanced ? (
               <div className="advanced-grid">
                 <div className="form-grid two">
@@ -284,7 +293,7 @@ export function GeneratePage() {
                     </a>
                   </>
                 ) : (
-                  <p className="muted">Waiting for synthesized audio…</p>
+                  <p className="muted">Waiting for synthesized audio...</p>
                 )}
                 {generationQuery.data.error_message ? <p className="error-text">{generationQuery.data.error_message}</p> : null}
               </div>

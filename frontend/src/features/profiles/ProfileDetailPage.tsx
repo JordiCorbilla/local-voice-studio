@@ -37,6 +37,8 @@ export function ProfileDetailPage() {
   const { profileId = "" } = useParams();
   const queryClient = useQueryClient();
   const [clipDrafts, setClipDrafts] = useState<Record<string, string>>({});
+  const [transcribingClipId, setTranscribingClipId] = useState<string | null>(null);
+  const [clipActionError, setClipActionError] = useState("");
   const profileQuery = useQuery({
     queryKey: ["profile", profileId],
     queryFn: () => api.getProfile(profileId),
@@ -72,11 +74,29 @@ export function ProfileDetailPage() {
   const updateTranscript = useMutation({
     mutationFn: ({ clipId, referenceText }: { clipId: string; referenceText: string }) =>
       api.updateClipTranscript(profileId, clipId, referenceText),
-    onSuccess: refresh,
+    onSuccess: () => {
+      setClipActionError("");
+      refresh();
+    },
+    onError: (mutationError) => {
+      setClipActionError(mutationError instanceof Error ? mutationError.message : "Unable to save transcript.");
+    },
   });
   const transcribeClip = useMutation({
     mutationFn: (clipId: string) => api.transcribeClip(profileId, clipId),
-    onSuccess: refresh,
+    onMutate: (clipId) => {
+      setTranscribingClipId(clipId);
+      setClipActionError("");
+    },
+    onSuccess: () => {
+      refresh();
+    },
+    onError: (mutationError) => {
+      setClipActionError(mutationError instanceof Error ? mutationError.message : "Unable to transcribe clip.");
+    },
+    onSettled: () => {
+      setTranscribingClipId(null);
+    },
   });
 
   if (!profileQuery.data) {
@@ -170,6 +190,7 @@ export function ProfileDetailPage() {
             <RecorderPanel onSave={(file) => uploadRecording.mutateAsync(file).then(() => undefined)} />
             {profile.clips.length ? (
               <div className="list">
+                {clipActionError ? <p className="error-text">{clipActionError}</p> : null}
                 {profile.clips.map((clip) => (
                   <div key={clip.id} className="clip-row">
                     <div className="split-header">
@@ -221,8 +242,20 @@ export function ProfileDetailPage() {
                       >
                         Save transcript
                       </button>
-                      <button className="button subtle" type="button" onClick={() => transcribeClip.mutate(clip.id)}>
-                        Transcribe locally
+                      <button
+                        className="button subtle"
+                        type="button"
+                        disabled={transcribingClipId === clip.id || transcribingClipId !== null}
+                        onClick={() => transcribeClip.mutate(clip.id)}
+                      >
+                        {transcribingClipId === clip.id ? (
+                          <>
+                            <span className="spinner" aria-hidden="true" />
+                            Transcribing...
+                          </>
+                        ) : (
+                          "Transcribe locally"
+                        )}
                       </button>
                       <button className="button danger" type="button" onClick={() => deleteClip.mutate(clip.id)}>
                         Remove clip

@@ -155,11 +155,20 @@ button {
 }
 
 .button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 11px 16px;
   background: transparent;
   color: var(--text);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .button.primary {
@@ -176,6 +185,21 @@ button {
 .button.danger {
   border-color: rgba(249, 115, 115, 0.3);
   color: #fecaca;
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 999px;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .panel {

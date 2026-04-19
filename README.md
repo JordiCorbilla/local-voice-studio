@@ -1,8 +1,13 @@
 # local-voice-studio
 
-`local-voice-studio` is a local-first voice cloning studio built around a React frontend and a FastAPI backend. It records or uploads reference clips, stores profile metadata in SQLite, keeps audio assets on disk, and runs local synthesis jobs without a cloud service. The backend now supports a pluggable local TTS engine boundary with XTTS and an optional Qwen3-TTS path for transcript-aware voice cloning.
+`local-voice-studio` is a local-first voice cloning studio built with React, FastAPI, SQLite, and local model runtimes. It records or uploads reference clips, stores profile metadata locally, keeps generated audio on disk, and can run local TTS without a cloud service.
 
-## Repository layout
+The app supports two local TTS paths:
+
+- `qwen3`: recommended for closer voice similarity because it uses reference audio plus the exact reference transcript.
+- `xtts`: Coqui XTTS v2 fallback/baseline. It is easier to run in some environments but was less faithful for this project.
+
+## Repository Layout
 
 ```text
 .
@@ -16,83 +21,146 @@
 `-- scripts
 ```
 
-## Setup
+## Requirements
 
-### Requirements
-
-- Python 3.10+
+- Windows PowerShell
+- Python 3.10+ for the base app and XTTS path
+- Python 3.12 is recommended by the upstream Qwen3-TTS docs
 - Node.js 22+
 - FFmpeg and FFprobe on `PATH`
-- Optional NVIDIA CUDA setup for faster XTTS or Qwen3-TTS inference
+- Optional NVIDIA CUDA runtime for faster generation
 
-### Install
+## From Scratch Setup
 
-```powershell
-.\scripts\setup.ps1
-```
-
-The setup script creates `.venv`, installs backend dependencies, and runs `npm.cmd install` in `frontend/`.
-
-### Optional XTTS install
-
-The default setup keeps XTTS optional so the rest of the app can run and test without the heavy runtime. To enable real synthesis:
+Run setup first from the repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".\backend[xtts]"
-.\.venv\Scripts\python.exe .\scripts\prefetch-model.py
+powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
 ```
 
-### Optional Qwen3-TTS install
+This creates `.venv`, installs backend dev dependencies, and installs frontend dependencies.
 
-Qwen3-TTS is wired in as an alternate engine. The official Qwen docs currently recommend a fresh Python 3.12 environment, so this path may require a separate backend venv if your existing XTTS setup stays on Python 3.10.
+If you prefer manual setup:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".\backend[qwen,transcription]"
+python -m venv .venv
+& .\.venv\Scripts\python.exe -m pip install --upgrade pip
+& .\.venv\Scripts\python.exe -m pip install -e ".\backend[dev]"
+npm.cmd --prefix .\frontend install
 ```
 
-Switch the backend to Qwen3-TTS with:
+## Recommended Run: Qwen3-TTS
+
+Install the Qwen and local transcription extras:
+
+```powershell
+& .\.venv\Scripts\python.exe -m pip install -e ".\backend[qwen,transcription]"
+```
+
+Start the backend in terminal 1:
 
 ```powershell
 $env:LVS_TTS_ENGINE = "qwen3"
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-backend.ps1
 ```
 
-Optional Qwen/Whisper-related env vars:
-
-- `LVS_QWEN_MODEL_NAME`
-- `LVS_QWEN_MODEL_DIR`
-- `LVS_QWEN_CACHE_DIR`
-- `LVS_WHISPER_MODEL_NAME`
-- `LVS_WHISPER_DEVICE`
-- `LVS_WHISPER_COMPUTE_TYPE`
-
-If XTTS install pulled `transformers` 5.x, force a compatible 4.x release and rerun the prefetch:
+Start the frontend in terminal 2:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install "transformers>=4.43,<4.47" --upgrade --force-reinstall
-.\.venv\Scripts\python.exe -m pip install "numpy==1.22.0" --upgrade --force-reinstall
-.\.venv\Scripts\python.exe .\scripts\prefetch-model.py
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-frontend.ps1
 ```
 
-## Run locally
+Open:
+
+```text
+http://localhost:5173
+```
+
+### If Port 8000 Is Already Busy
+
+Voicebox or another local app may already use `8000`. Use `8010` instead.
+
+Terminal 1:
+
+```powershell
+$env:LVS_TTS_ENGINE = "qwen3"
+$env:LVS_BACKEND_PORT = "8010"
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-backend.ps1
+```
+
+Terminal 2:
+
+```powershell
+$env:VITE_API_TARGET = "http://127.0.0.1:8010"
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-frontend.ps1
+```
+
+## Using Qwen3 Voice Cloning
+
+Qwen3 requires the transcript of the selected primary reference clip.
+
+1. Create a profile.
+2. Upload or record one clean reference clip.
+3. Mark the best clip as `Primary`.
+4. Paste the exact words spoken in that clip into `Reference transcript`.
+5. Click `Save transcript`.
+6. Go to `Generate`.
+7. Enter text and optional delivery instructions.
+8. Click `Generate audio`.
+
+You can also click `Transcribe locally` on a reference clip if the `transcription` extra is installed. The button shows a spinner while transcription is running.
+
+## Optional Run: XTTS v2
+
+Install XTTS:
+
+```powershell
+& .\.venv\Scripts\python.exe -m pip install -e ".\backend[xtts]"
+```
+
+Prefetch the XTTS model:
+
+```powershell
+& .\.venv\Scripts\python.exe .\scripts\prefetch-model.py
+```
 
 Start the backend:
 
 ```powershell
-.\scripts\dev-backend.ps1
+$env:LVS_TTS_ENGINE = "xtts"
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-backend.ps1
 ```
 
-Start the frontend in another terminal:
+Start the frontend:
 
 ```powershell
-.\scripts\dev-frontend.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-frontend.ps1
 ```
 
-Open `http://localhost:5173`.
+Important: `scripts\prefetch-model.py` is only for XTTS. It is not needed for Qwen3.
 
-## Environment variables
+## Common PowerShell Notes
 
+If PowerShell blocks `.ps1` scripts, use the one-command bypass:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
+```
+
+Or allow scripts only for the current terminal:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+```
+
+Activating the venv is optional because the documented commands call `.venv\Scripts\python.exe` directly.
+
+## Environment Variables
+
+- `LVS_TTS_ENGINE`: `qwen3` or `xtts`
+- `LVS_BACKEND_PORT`: backend dev port used by `scripts/dev-backend.ps1`; defaults to `8000`
+- `VITE_API_TARGET`: frontend dev proxy target; defaults to `http://127.0.0.1:8000`
 - `LVS_CORS_ORIGIN`
-- `LVS_TTS_ENGINE`
 - `LVS_DATA_DIR`
 - `LVS_DATABASE_PATH`
 - `LVS_PROFILES_DIR`
@@ -111,16 +179,16 @@ Open `http://localhost:5173`.
 - `LVS_FFPROBE_BIN`
 - `LVS_MAX_GENERATION_WORKERS`
 
-## Data layout
+## Data Layout
 
 - `data/app.db`: SQLite metadata
 - `data/profiles/{profile_id}/clips/{clip_id}/original{ext}`: original reference upload
 - `data/profiles/{profile_id}/clips/{clip_id}/normalized.wav`: normalized internal reference
 - `data/generated/{generation_id}.wav`: generated outputs
-- `data/cache/xtts/{profile_id}/conditioning.pt`: cached conditioning artifacts when available
-- `data/cache/qwen3/{profile_id}/voice_clone_prompt.pkl`: cached Qwen3 voice-clone prompts when supported
+- `data/cache/xtts/{profile_id}/conditioning.pt`: cached XTTS conditioning artifacts when available
+- `data/cache/qwen3/{profile_id}/voice_clone_prompt.pkl`: cached Qwen3 voice-clone prompt when available
 
-## API summary
+## API Summary
 
 - `GET/POST /api/profiles`
 - `GET/PATCH/DELETE /api/profiles/{id}`
@@ -144,7 +212,7 @@ Backend:
 
 ```powershell
 Set-Location .\backend
-..\.venv\Scripts\python.exe -m pytest
+& ..\.venv\Scripts\python.exe -m pytest
 ```
 
 Frontend:
@@ -154,17 +222,23 @@ Set-Location .\frontend
 npm.cmd run test
 ```
 
+Build frontend:
+
+```powershell
+npm.cmd --prefix .\frontend run build
+```
+
 ## Troubleshooting
 
-- If `npm` fails in PowerShell due to execution policy, use `npm.cmd`.
-- If uploads fail, verify both `ffmpeg` and `ffprobe` are available on `PATH`.
-- If XTTS is unavailable in diagnostics, install the backend `xtts` extra and prefetch the model.
-- If XTTS fails with `BeamSearchScorer` import errors, your `transformers` install is too new; reinstall `transformers>=4.43,<4.47`.
-- If XTTS complains about `TorchCodec is required for load_with_torchcodec`, update to the latest project code. The backend now patches XTTS to read the app's normalized WAV references without requiring `torchcodec`.
-- Qwen3-style cloning needs the transcript of the selected primary reference clip. Save it on the clip card before generating.
-- Local transcription requires the backend `transcription` extra; otherwise the transcript must be entered manually.
-- CPU synthesis works but will be substantially slower than CUDA on long inputs.
+- If `8000` is unavailable, set `LVS_BACKEND_PORT` and `VITE_API_TARGET` as shown above.
+- If uploads fail, verify `ffmpeg` and `ffprobe` are available on `PATH`.
+- If Qwen3 generation says a transcript is missing, open the selected profile and save `Reference transcript` for the primary clip.
+- If local transcription does nothing for a while, wait for the spinner; the first run may download/load the Whisper model.
+- If local transcription is unavailable, install `backend[transcription]` or paste the transcript manually.
+- If XTTS fails with `BeamSearchScorer` import errors, reinstall `transformers>=4.43,<4.47`.
+- If XTTS complains about `TorchCodec`, update to the latest project code. The backend patches XTTS to read normalized WAV references without requiring `torchcodec`.
+- CPU synthesis works but can be much slower than CUDA.
 
 ## Privacy
 
-All profile metadata, reference clips, generated outputs, and cache artifacts stay on the local filesystem. There is no cloud sync, auth layer, or remote inference service in this repository.
+All profile metadata, reference clips, transcripts, generated outputs, and cache artifacts stay on the local filesystem. There is no cloud sync, authentication layer, or remote inference service in this repository.
