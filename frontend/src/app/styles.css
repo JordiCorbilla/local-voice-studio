@@ -202,6 +202,13 @@ button {
   }
 }
 
+.job-progress {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--muted);
+}
+
 .panel {
   border: 1px solid var(--line);
   border-radius: 20px;

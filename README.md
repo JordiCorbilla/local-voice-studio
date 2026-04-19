@@ -233,6 +233,8 @@ npm.cmd --prefix .\frontend run build
 - If `8000` is unavailable, set `LVS_BACKEND_PORT` and `VITE_API_TARGET` as shown above.
 - If uploads fail, verify `ffmpeg` and `ffprobe` are available on `PATH`.
 - If Qwen3 generation says a transcript is missing, open the selected profile and save `Reference transcript` for the primary clip.
+- If Qwen3 logs `flash-attn is not installed`, generation can still work. Flash Attention is an optional speed optimization, mostly relevant on CUDA-capable NVIDIA setups.
+- If Qwen3 logs that `sox` could not be found, generation can still work if the current path does not require SoX. Install SoX only if generation/transcription later fails with a SoX-related error.
 - If local transcription does nothing for a while, wait for the spinner; the first run may download/load the Whisper model.
 - If local transcription is unavailable, install `backend[transcription]` or paste the transcript manually.
 - If XTTS fails with `BeamSearchScorer` import errors, reinstall `transformers>=4.43,<4.47`.

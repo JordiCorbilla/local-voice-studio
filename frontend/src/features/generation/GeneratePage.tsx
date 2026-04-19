@@ -293,7 +293,10 @@ export function GeneratePage() {
                     </a>
                   </>
                 ) : (
-                  <p className="muted">Waiting for synthesized audio...</p>
+                  <div className="job-progress">
+                    {generationRunning ? <span className="spinner" aria-hidden="true" /> : null}
+                    <span>Waiting for synthesized audio...</span>
+                  </div>
                 )}
                 {generationQuery.data.error_message ? <p className="error-text">{generationQuery.data.error_message}</p> : null}
               </div>
